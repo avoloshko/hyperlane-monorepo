@@ -3,6 +3,9 @@ pragma solidity >=0.6.11;
 
 import {IInterchainSecurityModule} from "../IInterchainSecurityModule.sol";
 
+/**
+ * @title IOptimisticIsm
+ */
 interface IOptimisticIsm is IInterchainSecurityModule {
     /**
      * @notice Initiates the pre-verification of interchain messages using the configured submodule
@@ -15,16 +18,16 @@ interface IOptimisticIsm is IInterchainSecurityModule {
         returns (bool);
 
     /**
-     * @notice Marks a specified submodule as compromised.
-     * @param _submodule The address of the submodule that is compromised.
+     * @notice Marks a specified submodule as compromised
+     * @param _submodule The address of the submodule that is compromised
      */
     function markFraudulent(address _submodule) external;
 
     /**
-     * @notice Retrieves the current submodule designated for message verification.
-     * @dev The submodule can vary based on the content or context of the message being processed.
-     * @param _message Formatted Hyperlane message whose corresponding submodule is to be retrieved.
-     * @return module The ISM instance that should be used to verify the provided message.
+     * @notice Retrieves the current submodule designated for message verification
+     * @dev The submodule can vary based on the content or context of the message being processed
+     * @param _message Formatted Hyperlane message whose corresponding submodule is to be retrieved
+     * @return module The ISM instance that should be used to verify the provided message
      */
     function submodule(bytes calldata _message)
         external

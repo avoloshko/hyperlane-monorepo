@@ -51,7 +51,7 @@ contract OptimisticIsm is Test {
 
         deployOptimisticIsmWithWatchers(m, n, seed);
 
-        (address[] memory watchers, ) = ism.watchersAndThreshold("");
+        (address[] memory watchers, ) = ism.watchersAndThreshold();
 
         assertTrue(address(factory.getAddress(watchers, m)) == address(ism));
         assertTrue(address(factory.deploy(watchers, m)) == address(ism));
@@ -159,7 +159,7 @@ contract OptimisticIsm is Test {
 
         address submodule = address(new TestIsm(""));
 
-        (address[] memory watchers, ) = ism.watchersAndThreshold("");
+        (address[] memory watchers, ) = ism.watchersAndThreshold();
 
         vm.assume(0 < watcherIndex && watcherIndex < watchers.length);
 
@@ -184,7 +184,7 @@ contract OptimisticIsm is Test {
 
         address submodule = address(new TestIsm(""));
 
-        (address[] memory watchers, ) = ism.watchersAndThreshold("");
+        (address[] memory watchers, ) = ism.watchersAndThreshold();
 
         vm.assume(0 < watcher1Index && watcher1Index < watchers.length);
         uint32 watcher2Index = watcher1Index + 1;
@@ -236,7 +236,7 @@ contract OptimisticIsm is Test {
 
         address submodule = address(new TestIsm(""));
 
-        (address[] memory watchers, ) = ism.watchersAndThreshold("");
+        (address[] memory watchers, ) = ism.watchersAndThreshold();
 
         vm.assume(0 < watcherIndex && watcherIndex < watchers.length);
 
@@ -476,9 +476,8 @@ contract OptimisticIsm is Test {
         vm.prank(ism.owner());
         ism.setSubmodule(newSubmodule, origin);
 
-        (address[] memory watchers, uint8 threshold) = ism.watchersAndThreshold(
-            ""
-        );
+        (address[] memory watchers, uint8 threshold) = ism
+            .watchersAndThreshold();
 
         for (uint8 i = 0; i < threshold; ++i) {
             vm.prank(watchers[i]);

@@ -11,7 +11,7 @@ import "../../Mailbox.sol";
 
 /**
  * @title AbstractOptimisticIsm
- * @notice Manages message verification for interchain communication using an optimistic approach.
+ * @notice Manages message verification for interchain communication using an optimistic approach
  */
 abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     // ============ Constants ============
@@ -24,12 +24,11 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     // ======= OVERRIDE THESE TO IMPLEMENT =======
 
     /**
-     * @dev Gets the watchers and the threshold for a specific message.
-     * @param _message The interchain message.
+     * @dev Gets the watchers and the threshold
      * @return watchers An array of watcher addresses
-     * @return threshold The threshold value.
+     * @return threshold The threshold value
      */
-    function watchersAndThreshold(bytes calldata _message)
+    function watchersAndThreshold()
         public
         view
         virtual
@@ -38,23 +37,23 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     // ============ Events ============
 
     /**
-     * @notice Emitted when the fraud window duration is set.
-     * @param fraudWindow The new duration of the fraud window.
+     * @notice Emitted when the fraud window duration is set
+     * @param fraudWindow The new duration of the fraud window
      */
     event FraudWindowSet(uint256 fraudWindow);
 
     /**
-     * @notice Emitted when a submodule is assigned to a specific message origin.
-     * @param submodule The address of the submodule.
-     * @param origin The origin of the messages the submodule is responsible for.
+     * @notice Emitted when a submodule is assigned to a specific message origin
+     * @param submodule The address of the submodule
+     * @param origin The origin of the messages the submodule is responsible for
      */
     event SubmoduleSet(address submodule, uint32 origin);
 
     /**
-     * @notice Emitted when a message is pre-verified.
-     * @param messageId The unique identifier of the pre-verified message.
-     * @param submodule The address of the submodule that pre-verified the message.
-     * @param timestamp The block timestamp when the message was pre-verified.
+     * @notice Emitted when a message is pre-verified
+     * @param messageId The unique identifier of the pre-verified message
+     * @param submodule The address of the submodule that pre-verified the message
+     * @param timestamp The block timestamp when the message was pre-verified
      */
     event MessagePreVerified(
         bytes32 indexed messageId,
@@ -90,11 +89,11 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     // ============ Modifiers ============
 
     /**
-     * @notice Ensures function access is restricted to authorized watchers.
-     * @dev This is a less optimized O(n) lookup, but is acceptable due to its rare usage and small watcher list.
+     * @notice Ensures function access is restricted to authorized watchers
+     * @dev This is a less optimized O(n) lookup, but is acceptable due to its rare usage and small watcher list
      */
     modifier onlyWatcher() {
-        (address[] memory _watchers, ) = this.watchersAndThreshold("");
+        (address[] memory _watchers, ) = this.watchersAndThreshold();
 
         bool found = false;
         for (uint256 i = 0; i < _watchers.length; ) {
@@ -117,10 +116,10 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     // ============ Public Functions ============
 
     /**
-     * @notice Retrieves the current submodule designated for message verification.
-     * @dev The submodule can vary based on the content or context of the message being processed.
-     * @param _message Formatted Hyperlane message whose corresponding submodule is to be retrieved.
-     * @return module The ISM instance that should be used to verify the provided message.
+     * @notice Retrieves the current submodule designated for message verification
+     * @dev The submodule can vary based on the content or context of the message being processed
+     * @param _message Formatted Hyperlane message whose corresponding submodule is to be retrieved
+     * @return module The ISM instance that should be used to verify the provided message
      */
     function submodule(bytes calldata _message)
         external
@@ -133,9 +132,9 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     }
 
     /**
-     * @notice Verifies a message after it has passed the fraud window period.
-     * @param _message The interchain message.
-     * @return True if the verification is successful, otherwise false.
+     * @notice Verifies a message after it has passed the fraud window period
+     * @param _message The interchain message
+     * @return True if the verification is successful, otherwise false
      */
     function verify(bytes calldata, bytes calldata _message)
         public
@@ -151,14 +150,14 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
             "fraudWindow has not passed yet"
         );
 
-        (, uint8 _threshold) = watchersAndThreshold(_message);
+        (, uint8 _threshold) = watchersAndThreshold();
 
         require(
             fraudulentCount[_data.submodule] < _threshold,
             "pre-verification submodule is fraudulent"
         );
 
-        // Can release some GAS now as as Mailbox contract keeps a list of delivered messages.
+        // Can release some GAS now as as Mailbox contract keeps a list of delivered messages
         delete preVerifiedMessageData[_id];
 
         return true;
@@ -200,8 +199,8 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     }
 
     /**
-     * @notice Marks a submodule as fraudulent.
-     * @param _submodule The address of the submodule to mark as fraudulent.
+     * @notice Marks a submodule as fraudulent
+     * @param _submodule The address of the submodule to mark as fraudulent
      */
     function markFraudulent(address _submodule) external override onlyWatcher {
         require(
@@ -217,8 +216,8 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     }
 
     /**
-     * @notice Sets the duration of the fraud window.
-     * @param _fraudWindow The new duration of the fraud window.
+     * @notice Sets the duration of the fraud window
+     * @param _fraudWindow The new duration of the fraud window
      */
     function setFraudWindow(uint256 _fraudWindow) external onlyOwner {
         require(_fraudWindow > 0, "fraudWindow must be positive");
@@ -229,9 +228,9 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     }
 
     /**
-     * @notice Assigns a submodule to a specific message origin.
-     * @param _submodule The address of the submodule.
-     * @param _origin The origin of the messages the submodule is responsible for.
+     * @notice Assigns a submodule to a specific message origin
+     * @param _submodule The address of the submodule
+     * @param _origin The origin of the messages the submodule is responsible for
      */
     function setSubmodule(address _submodule, uint32 _origin)
         external
