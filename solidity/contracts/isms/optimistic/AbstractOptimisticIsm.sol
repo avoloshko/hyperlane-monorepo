@@ -79,7 +79,7 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     mapping(address => uint256) public fraudulentCount;
 
     // Mapping to store pre-verified messages along with submodule
-    mapping(bytes32 => PreVerifiedMessageData) public preVerifiedMessages;
+    mapping(bytes32 => PreVerifiedMessageData) public preVerifiedMessageData;
 
     // Mapping to store submodules per message origin
     mapping(uint32 => IInterchainSecurityModule) public submodules;
@@ -138,7 +138,7 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
     {
         bytes32 _id = Message.id(_message);
 
-        PreVerifiedMessageData memory _data = preVerifiedMessages[_id];
+        PreVerifiedMessageData memory _data = preVerifiedMessageData[_id];
 
         require(_data.timestamp > 0, "message has not been pre-verified");
         require(
@@ -154,7 +154,7 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
         );
 
         // Can release some GAS now as as Mailbox contract keeps a list of delivered messages.
-        delete preVerifiedMessages[_id];
+        delete preVerifiedMessageData[_id];
 
         return true;
     }
@@ -175,11 +175,11 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
         IInterchainSecurityModule _submodule = submodules[_origin];
 
         require(
-            preVerifiedMessages[_id].timestamp == 0,
+            preVerifiedMessageData[_id].timestamp == 0,
             "message has already been pre-verified"
         );
 
-        preVerifiedMessages[_id] = PreVerifiedMessageData({
+        preVerifiedMessageData[_id] = PreVerifiedMessageData({
             submodule: address(_submodule),
             timestamp: uint96(block.timestamp)
         });
@@ -235,18 +235,5 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
         submodules[_origin] = IInterchainSecurityModule(_submodule);
 
         emit SubmoduleSet(_submodule, _origin);
-    }
-
-    /**
-     * @dev Retrieves the pre-verified message data.
-     * @param _messageId The identifier of the message.
-     * @return The address of the submodule and the timestamp of when the message was pre-verified.
-     */
-    function preVerifiedMessageData(bytes32 _messageId)
-        external
-        returns (address, uint96)
-    {
-        PreVerifiedMessageData memory data = preVerifiedMessages[_messageId];
-        return (data.submodule, data.timestamp);
     }
 }
