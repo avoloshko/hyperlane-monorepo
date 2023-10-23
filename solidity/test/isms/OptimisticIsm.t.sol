@@ -18,6 +18,7 @@ contract OptimisticIsm is Test {
     StaticOptimisticIsmFactory factory;
     StaticOptimisticIsm ism;
     bytes metadata;
+    address[] watchers;
 
     function setUp() public {
         factory = new StaticOptimisticIsmFactory();
@@ -29,12 +30,11 @@ contract OptimisticIsm is Test {
         bytes32 seed
     ) internal {
         bytes32 randomness = seed;
-        address[] memory watchers = new address[](n);
+        watchers = new address[](n);
 
         for (uint256 i = 0; i < n; i++) {
             randomness = keccak256(abi.encode(randomness));
-            address watcher = address(uint160(uint256(randomness)));
-            watchers[i] = watcher;
+            watchers[i] = address(uint160(uint256(randomness)));
         }
 
         metadata = abi.encode(randomness);
@@ -50,8 +50,6 @@ contract OptimisticIsm is Test {
         vm.assume(0 < m && m <= n && n < 10);
 
         deployOptimisticIsmWithWatchers(m, n, seed);
-
-        (address[] memory watchers, ) = ism.watchersAndThreshold();
 
         assertTrue(address(factory.getAddress(watchers, m)) == address(ism));
         assertTrue(address(factory.deploy(watchers, m)) == address(ism));
@@ -159,8 +157,6 @@ contract OptimisticIsm is Test {
 
         address submodule = address(new TestIsm(""));
 
-        (address[] memory watchers, ) = ism.watchersAndThreshold();
-
         vm.assume(0 < watcherIndex && watcherIndex < watchers.length);
 
         address watcher = watchers[watcherIndex];
@@ -183,8 +179,6 @@ contract OptimisticIsm is Test {
         deployOptimisticIsmWithWatchers(m, n, seed);
 
         address submodule = address(new TestIsm(""));
-
-        (address[] memory watchers, ) = ism.watchersAndThreshold();
 
         vm.assume(0 < watcher1Index && watcher1Index < watchers.length);
         uint32 watcher2Index = watcher1Index + 1;
@@ -235,8 +229,6 @@ contract OptimisticIsm is Test {
         deployOptimisticIsmWithWatchers(m, n, seed);
 
         address submodule = address(new TestIsm(""));
-
-        (address[] memory watchers, ) = ism.watchersAndThreshold();
 
         vm.assume(0 < watcherIndex && watcherIndex < watchers.length);
 
@@ -476,10 +468,7 @@ contract OptimisticIsm is Test {
         vm.prank(ism.owner());
         ism.setSubmodule(newSubmodule, origin);
 
-        (address[] memory watchers, uint8 threshold) = ism
-            .watchersAndThreshold();
-
-        for (uint8 i = 0; i < threshold; ++i) {
+        for (uint8 i = 0; i < n; ++i) {
             vm.prank(watchers[i]);
             ism.markFraudulent(newSubmodule);
         }

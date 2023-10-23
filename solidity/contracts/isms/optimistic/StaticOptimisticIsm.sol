@@ -20,9 +20,8 @@ contract StaticOptimisticIsm is AbstractOptimisticIsm {
      * @return threshold The number of ISMs needed to verify
      */
     function watchersAndThreshold()
-        public
-        view
-        virtual
+        internal
+        pure
         override
         returns (address[] memory, uint8)
     {

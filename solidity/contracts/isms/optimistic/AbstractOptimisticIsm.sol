@@ -29,8 +29,8 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
      * @return threshold The threshold value
      */
     function watchersAndThreshold()
-        public
-        view
+        internal
+        pure
         virtual
         returns (address[] memory watchers, uint8 threshold);
 
@@ -93,7 +93,7 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
      * @dev This is a less optimized O(n) lookup, but is acceptable due to its rare usage and small watcher list
      */
     modifier onlyWatcher() {
-        (address[] memory _watchers, ) = this.watchersAndThreshold();
+        (address[] memory _watchers, ) = watchersAndThreshold();
 
         bool found = false;
         for (uint256 i = 0; i < _watchers.length; ) {
@@ -137,7 +137,7 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
      * @return True if the verification is successful, otherwise false
      */
     function verify(bytes calldata, bytes calldata _message)
-        public
+        external
         returns (bool)
     {
         bytes32 _id = Message.id(_message);
