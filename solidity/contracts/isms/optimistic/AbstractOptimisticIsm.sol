@@ -51,12 +51,13 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
 
     /**
      * @notice Emitted when a message is pre-verified
+     * @dev messageId is not indexed to save gas. Set it to indexed if there will be look ups by messageId.
      * @param messageId The unique identifier of the pre-verified message
      * @param submodule The address of the submodule that pre-verified the message
      * @param timestamp The block timestamp when the message was pre-verified
      */
     event MessagePreVerified(
-        bytes32 indexed messageId,
+        bytes32 messageId,
         address submodule,
         uint256 timestamp
     );
@@ -157,7 +158,7 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
             "pre-verification submodule is fraudulent"
         );
 
-        // Can release some GAS now as as Mailbox contract keeps a list of delivered messages
+        // Can release some gas now as as Mailbox contract keeps a list of delivered messages
         delete preVerifiedMessageData[_id];
 
         return true;
