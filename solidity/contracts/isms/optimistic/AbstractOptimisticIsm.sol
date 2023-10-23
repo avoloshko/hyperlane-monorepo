@@ -37,8 +37,30 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
 
     // ============ Events ============
 
+    /**
+     * @notice Emitted when the fraud window duration is set.
+     * @param fraudWindow The new duration of the fraud window.
+     */
     event FraudWindowSet(uint256 fraudWindow);
+
+    /**
+     * @notice Emitted when a submodule is assigned to a specific message origin.
+     * @param submodule The address of the submodule.
+     * @param origin The origin of the messages the submodule is responsible for.
+     */
     event SubmoduleSet(address submodule, uint32 origin);
+
+    /**
+     * @notice Emitted when a message is pre-verified.
+     * @param messageId The unique identifier of the pre-verified message.
+     * @param submodule The address of the submodule that pre-verified the message.
+     * @param timestamp The block timestamp when the message was pre-verified.
+     */
+    event MessagePreVerified(
+        bytes32 indexed messageId,
+        address submodule,
+        uint256 timestamp
+    );
 
     // ============= Structs =============
 
@@ -67,6 +89,10 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
 
     // ============ Modifiers ============
 
+    /**
+     * @notice Ensures function access is restricted to authorized watchers.
+     * @dev This is a less optimized O(n) lookup, but is acceptable due to its rare usage and small watcher list.
+     */
     modifier onlyWatcher() {
         (address[] memory _watchers, ) = this.watchersAndThreshold("");
 
@@ -146,17 +172,24 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
         bytes32 _id = Message.id(_message);
         uint32 _origin = Message.origin(_message);
 
-        IInterchainSecurityModule _ism = submodules[_origin];
+        IInterchainSecurityModule _submodule = submodules[_origin];
+
+        require(
+            preVerifiedMessages[_id].timestamp == 0,
+            "message has already been pre-verified"
+        );
 
         preVerifiedMessages[_id] = PreVerifiedMessageData({
-            submodule: address(_ism),
+            submodule: address(_submodule),
             timestamp: uint96(block.timestamp)
         });
 
         require(
-            _ism.verify(_metadata, _message),
+            _submodule.verify(_metadata, _message),
             "message does not pass pre-verification"
         );
+
+        emit MessagePreVerified(_id, address(_submodule), block.timestamp);
 
         return true;
     }

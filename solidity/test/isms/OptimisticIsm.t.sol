@@ -42,6 +42,21 @@ contract OptimisticIsm is Test {
         ism = StaticOptimisticIsm(factory.deploy(watchers, m));
     }
 
+    function testFactory(
+        uint8 m,
+        uint8 n,
+        bytes32 seed
+    ) public {
+        vm.assume(0 < m && m <= n && n < 10);
+
+        deployOptimisticIsmWithWatchers(m, n, seed);
+
+        (address[] memory watchers, ) = ism.watchersAndThreshold("");
+
+        assertTrue(address(factory.getAddress(watchers, m)) == address(ism));
+        assertTrue(address(factory.deploy(watchers, m)) == address(ism));
+    }
+
     function testSetSubmodule(
         uint8 m,
         uint8 n,
@@ -278,7 +293,7 @@ contract OptimisticIsm is Test {
         uint8 n,
         bytes32 seed,
         uint32 origin,
-        bytes memory message
+        bytes memory body
     ) public {
         vm.assume(0 < m && m <= n && n < 10);
         deployOptimisticIsmWithWatchers(m, n, seed);
@@ -297,9 +312,39 @@ contract OptimisticIsm is Test {
                 bytes32(0),
                 uint32(0),
                 bytes32(0),
-                message
+                body
             )
         );
+    }
+
+    function testPreVerify_revertsWhenMessageHasAlreadyBeenPreVerified(
+        uint8 m,
+        uint8 n,
+        bytes32 seed,
+        uint32 origin,
+        bytes memory body
+    ) public {
+        vm.assume(0 < m && m <= n && n < 10);
+        deployOptimisticIsmWithWatchers(m, n, seed);
+
+        address newSubmodule = address(new TestIsm(metadata));
+        vm.prank(ism.owner());
+        ism.setSubmodule(newSubmodule, origin);
+
+        bytes memory message = abi.encodePacked(
+            uint8(0),
+            uint32(0),
+            uint32(origin),
+            bytes32(0),
+            uint32(0),
+            bytes32(0),
+            body
+        );
+
+        assertTrue(ism.preVerify(metadata, message));
+
+        vm.expectRevert(bytes("message has already been pre-verified"));
+        ism.preVerify(metadata, message);
     }
 
     function testVerify(
