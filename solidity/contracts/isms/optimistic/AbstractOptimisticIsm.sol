@@ -97,10 +97,15 @@ abstract contract AbstractOptimisticIsm is IOptimisticIsm, Ownable {
         (address[] memory _watchers, ) = this.watchersAndThreshold("");
 
         bool found = false;
-        for (uint256 i = 0; i < _watchers.length; i++) {
+        for (uint256 i = 0; i < _watchers.length; ) {
             if (_watchers[i] == msg.sender) {
                 found = true;
                 break;
+            }
+
+            // Optimize gas
+            unchecked {
+                ++i;
             }
         }
 
